@@ -6,6 +6,7 @@ import com.vasylb.Styles.Companion.inputContainer
 import com.vasylb.Styles.Companion.row
 import com.vasylb.Styles.Companion.scrollPane
 import com.vasylb.controller.MainController
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.layout.HBox
@@ -14,7 +15,6 @@ import tornadofx.*
 class MainView : View("Hello TornadoFX") {
 
     private val mainController: MainController by inject()
-
 
     override val root = gridpane {
         scrollpane(true) {
@@ -45,7 +45,7 @@ class MainView : View("Hello TornadoFX") {
             }
             button("Package") {
                 addClass(button)
-                setOnAction {mainController.createPkg()}
+                setOnAction { mainController.createPkg() }
             }
         }
     }
@@ -74,10 +74,20 @@ class MainView : View("Hello TornadoFX") {
                 addClass(button)
                 setOnAction { mainController.openFile() }
             }
-//            button("Record") {
-//                addClass(button)
-//            }
+            button("Record") {
+                val isRecording = SimpleBooleanProperty(false)
 
+                addClass(button)
+                id = entry.key
+                isRecording.onChange { rec ->
+                    text = if (rec) "Stop" else "Record"
+                }
+
+                setOnAction {
+                    mainController.handleRecording(entry.key, isRecording.value)
+                    isRecording.set(!isRecording.value)
+                }
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.vasylb.controller
 
+import com.vasylb.SoundRecorder
 import com.vasylb.withResources
 import javafx.beans.property.SimpleStringProperty
 import javafx.stage.FileChooser
@@ -7,10 +8,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream
 import se.jabberwocky.ccrypt.CCrypt
-import tornadofx.Controller
-import tornadofx.FileChooserMode
-import tornadofx.chooseDirectory
-import tornadofx.chooseFile
+import tornadofx.*
 import java.io.BufferedOutputStream
 import java.io.File
 import java.nio.file.Files
@@ -20,6 +18,7 @@ import java.nio.file.Paths
 class MainController : Controller() {
 
     val observableAudioFileNames: MutableMap<String, SimpleStringProperty>
+    private val javaSoundRecorder = SoundRecorder()
 
     init {
         observableAudioFileNames = initFileNames()
@@ -60,6 +59,17 @@ class MainController : Controller() {
             val packageName = Paths.get("./temp.pkg");
             this.packFiles(packageName)
             this.encryptArchive(packageName, destination[0])
+        }
+    }
+
+    fun handleRecording(key: String, isRecording: Boolean) {
+        runAsync {
+            if (isRecording) {
+                javaSoundRecorder.finish()
+                updateInputs("./data/$key.wav")
+            } else {
+                javaSoundRecorder.start(key)
+            }
         }
     }
 
