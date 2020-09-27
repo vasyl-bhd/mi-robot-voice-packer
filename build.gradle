@@ -1,0 +1,37 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "1.4.0"
+    id 'org.openjfx.javafxplugin' version '0.0.8'
+    id 'application'
+}
+group = 'com.vasylb'
+version = '1.0'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+application {
+    mainClassName = "com.vasylb.MainKt"
+}
+
+javafx {
+    version = "11.0.2"
+    modules = ['javafx.controls', 'javafx.graphics']
+}
+
+
+dependencies {
+    implementation "se.jabberwocky.ccrypt:ccrypt:0.1-SNAPSHOT"
+    compile group: 'org.apache.commons', name: 'commons-compress', version: '1.20'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    implementation "no.tornado:tornadofx:$tornadofx_version"
+    testImplementation "org.jetbrains.kotlin:kotlin-test-junit"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "11"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "11"
+}
