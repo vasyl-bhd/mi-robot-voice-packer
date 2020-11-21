@@ -1,48 +1,42 @@
 package com.vasylb.controller
 
-import com.vasylb.SoundRecorder
-import com.vasylb.withResources
+import com.vasylb.service.SoundRecorder
+import com.vasylb.service.FileService
+import com.vasylb.service.PackageService
+import com.vasylb.util.getFileName
+import com.vasylb.util.withoutExt
 import javafx.beans.property.SimpleStringProperty
 import javafx.stage.FileChooser
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
-import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream
-import se.jabberwocky.ccrypt.CCrypt
 import tornadofx.*
-import java.io.BufferedOutputStream
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 class MainController : Controller() {
 
-    val observableAudioFileNames: MutableMap<String, SimpleStringProperty>
-    private val javaSoundRecorder = SoundRecorder()
-
-    init {
-        observableAudioFileNames = initFileNames()
-    }
+    val observableAudioFileNames = initFileNames()
 
     fun openFolder() {
-        val dir = chooseDirectory("Select audio folder")
-        dir?.let {
-            File(dir.absolutePath).walk()
-                .filter { it.isFile }
-                .filter { it.canonicalPath.endsWith(".wav") }
-                .map { it.absolutePath }
-                .forEach { this.updateInputs(it) }
+        initFileNames()
+        val dir = chooseDirectory("Select folder with audio files")
+        runAsync {
+            FileService.getFilesFromFolder(dir)
+        } ui { filename ->
+            filename.forEach { this.updateInputs(it) }
         }
     }
 
-    fun openFile() {
+    fun openFile(key: String) {
         val file =
             chooseFile(
                 "Select .wav file",
-                arrayOf(FileChooser.ExtensionFilter("Wav files(*.wav)", "*.wav"))
+                arrayOf(FileChooser.ExtensionFilter("Wav files(*.wav)", "*.wav")),
+                null,
+                FileChooserMode.Single
             )
 
-        file.map { it.absolutePath }.forEach { this.updateInputs(it) }
+        file.map { it.absolutePath }.forEach {
+            this.updateInputs(key, it)
+        }
 
     }
 
@@ -52,52 +46,27 @@ class MainController : Controller() {
                 "Select where to save",
                 arrayOf(FileChooser.ExtensionFilter("Pkg Files(*.pkg", "*.pkg")),
                 null,
-                FileChooserMode.Save
+                FileChooserMode.Save,
             )
 
         if (destination.isNotEmpty()) {
-            val packageName = Paths.get("./temp.pkg");
-            this.packFiles(packageName)
-            this.encryptArchive(packageName, destination[0])
-        }
-    }
-
-    fun handleRecording(key: String, isRecording: Boolean) {
-        runAsync {
-            if (isRecording) {
-                javaSoundRecorder.finish()
-                updateInputs("./data/$key.wav")
-            } else {
-                javaSoundRecorder.start(key)
+            runAsync {
+                PackageService.createPackage(destination[0], observableAudioFileNames.values.map { it.get() })
+            } ui {
+                information("Packaging done", "Package was created at $destination")
             }
         }
     }
 
-    private fun encryptArchive(packageName: Path, destination: File) {
-        val original = packageName.toFile()
-        CCrypt("r0ckrobo#23456").encrypt(original, destination)
-        original.delete()
-    }
-
-    private fun packFiles(packageName: Path) {
-        withResources {
-            val newOutputStream = Files.newOutputStream(packageName)
-            val bufferedOutputStream = BufferedOutputStream(newOutputStream)
-            val gzipCompressorOutputStream = GzipCompressorOutputStream(bufferedOutputStream)
-            val tarArchiveOutputStream = TarArchiveOutputStream(gzipCompressorOutputStream)
-
-            observableAudioFileNames
-                .values
-                .map { it.get() }
-                .filter { it.isNotBlank() }
-                .map { Paths.get(it) }
-                .forEach { path ->
-                    tarArchiveOutputStream.putArchiveEntry(TarArchiveEntry(path.toFile(), path.fileName.toString()))
-                    Files.copy(path, tarArchiveOutputStream)
-                    tarArchiveOutputStream.closeArchiveEntry()
-                }
-            tarArchiveOutputStream.finish()
-            tarArchiveOutputStream.close()
+    //TODO refactor this
+    fun handleRecording(key: String, isRecording: Boolean) {
+        runAsync {
+            if (isRecording) {
+                SoundRecorder.finish()
+                updateInputs("./data/$key.wav")
+            } else {
+                SoundRecorder.start(key)
+            }
         }
     }
 
@@ -111,7 +80,7 @@ class MainController : Controller() {
     }
 
     private fun initFileNames(): MutableMap<String, SimpleStringProperty> {
-        val filePath = this::class.java.classLoader?.getResource("voice_names.csv")?.toURI()
+        val filePath = javaClass.classLoader?.getResource("voice_names.csv")?.toURI()
 
         return Files.readAllLines(Path.of(filePath))
             .map { it.split(",")[0].withoutExt() }
@@ -119,13 +88,4 @@ class MainController : Controller() {
             .toMutableMap()
 
     }
-
-    private fun String.withoutExt(): String {
-        return this.substring(0, this.length - 4)
-    }
-
-    private fun getFileName(path: String): String {
-        return path.substring(path.lastIndexOf("/") + 1, path.length - 4)
-    }
-
 }

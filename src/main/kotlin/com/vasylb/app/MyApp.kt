@@ -13,7 +13,6 @@ class MyApp: App(MainView::class, Styles::class) {
 
         stage.height = 600.0
         stage.width = 800.0
-
     }
     init {
         reloadViewsOnFocus()

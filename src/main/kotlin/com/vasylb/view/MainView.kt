@@ -6,13 +6,12 @@ import com.vasylb.Styles.Companion.inputContainer
 import com.vasylb.Styles.Companion.row
 import com.vasylb.Styles.Companion.scrollPane
 import com.vasylb.controller.MainController
-import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.geometry.Pos
 import javafx.scene.layout.HBox
 import tornadofx.*
 
-class MainView : View("Hello TornadoFX") {
+class MainView : View("Mi Lang packer") {
 
     private val mainController: MainController by inject()
 
@@ -72,22 +71,22 @@ class MainView : View("Hello TornadoFX") {
             }
             button("...") {
                 addClass(button)
-                setOnAction { mainController.openFile() }
+                setOnAction { mainController.openFile(entry.key) }
             }
-            button("Record") {
-                val isRecording = SimpleBooleanProperty(false)
-
-                addClass(button)
-                id = entry.key
-                isRecording.onChange { rec ->
-                    text = if (rec) "Stop" else "Record"
-                }
-
-                setOnAction {
-                    mainController.handleRecording(entry.key, isRecording.value)
-                    isRecording.set(!isRecording.value)
-                }
-            }
+//            button("Record") {
+//                val isRecording = SimpleBooleanProperty(false)
+//
+//                addClass(button)
+//                id = entry.key
+//                isRecording.onChange { rec ->
+//                    text = if (rec) "Stop" else "Record"
+//                }
+//
+//                setOnAction {
+//                    mainController.handleRecording(entry.key, isRecording.value)
+//                    isRecording.set(!isRecording.value)
+//                }
+//            }
         }
     }
 }

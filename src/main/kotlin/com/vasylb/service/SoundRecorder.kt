@@ -1,4 +1,4 @@
-package com.vasylb
+package com.vasylb.service
 
 import java.io.File
 import java.io.IOException
@@ -8,7 +8,7 @@ import javax.sound.sampled.*
  * A sample program is to demonstrate how to record sound in Java
  * author: www.codejava.net
  */
-class SoundRecorder {
+object SoundRecorder {
     // format of audio file
     private val fileType = AudioFileFormat.Type.WAVE
 

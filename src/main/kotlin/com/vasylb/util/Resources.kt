@@ -1,7 +1,7 @@
-package com.vasylb
+package com.vasylb.util
 
 class Resources : AutoCloseable {
-    val resources = mutableListOf<AutoCloseable>()
+    private val resources = mutableListOf<AutoCloseable>()
 
     fun <T: AutoCloseable> T.use(): T {
         resources += this
